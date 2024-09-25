@@ -1,0 +1,189 @@
+<script>
+  // trigger when user will click on the pencil icon to edit the group
+	$(document).on("click", '.edit-btn', function() {
+		// take out the data-id attribute value
+		id = this.attributes['data-id'].value
+    // assign the value to group-form attribute data-id
+		$('#group-form').attr('data-id', id)
+		form = $('#group-form')
+		form.attr('edit', 'true')
+		$.ajax({
+			url: "{% url 'get-group' %}",
+			data: {
+				"id": id
+			},
+			success: function(data) {
+				// add the edit group information to the form
+				group = JSON.parse(data.group)
+				img = $(".img")
+				gname = $(".name")
+				description = $(".description")
+				img.html(group.img)
+				gname.val(group.name)
+				var select = document.getElementById("type");
+				select.selectedIndex = group.type - 1;
+				sel_op = select.options[select.selectedIndex]
+				sel_op.setAttribute("selected", "selected")
+				description.val(group.description)
+			}
+		});
+	})
+/* the group-form shows the group form to the user after the either the create or edit action is called
+this first checked whether the call is from edit or create using a simple logic and the process the call to backend 
+after retreving all the data*/
+$(document).on("submit", '#group-form', function(event) {
+	// prevent from redirect of form
+	event.preventDefault();
+	// Getting the data from form
+	form = document.getElementById('group-form')
+	edit = $(this).attr('edit')
+	if (typeof edit !== 'undefined' && edit !== false) {
+		var form_data = new FormData(form);
+		id = $('#group-form').attr('data-id')
+		form_data.append('id', id)
+		$.ajax({
+			url: "{% url 'edit-group' %}",
+			data: form_data,
+			type: "POST",
+			processData: false,
+			contentType: false,
+			success: function(data) {
+        // if the status is 1 (datatype could be string or int) then simply make the changes in the frontend and reset the form
+				if (data.status_code == 1) {
+					group = JSON.parse(data.group)
+					console.log(group.img)
+					$('#offcanvasWithBothOptions').offcanvas('hide')
+					$(this).removeAttr('edit')
+					form.reset()
+					group_element = createGroupElement(group)
+					$('#group-' + group.id).replaceWith(group_element)
+					sendMessage(data.messages[0])
+
+				} else {
+					sendMessage(data.messages[0])
+				}
+			}
+
+		});
+	} else {
+		createForm(form)
+	}
+})
+
+function createForm(form) {
+  // retreive the form and pass it to the backend
+	var form_data = new FormData(form);
+	$.ajax({
+		url: "{% url 'create-group' %}",
+		data: form_data,
+		type: "POST",
+		processData: false,
+		contentType: false,
+		success: function(data) {
+      //if the data status is 1 then make the changes in the frontend
+      if(data.status_code === 1 ){
+		$('#offcanvasWithBothOptions').offcanvas('hide')
+			form.reset()
+			console.log(JSON.parse(data.group))
+			new_group_element = createGroupElement(JSON.parse(data.group))
+			document.getElementById('gtbody').innerHTML += new_group_element
+			sendMessage(data.messages[0])
+	  }
+	  else{
+		sendMessage(data.messages[0])
+	  }
+		}
+
+	});
+	event.preventDefault();
+	return false
+}
+// image validation
+$(document).on("change", '#img', function() {
+	var mime_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+	img = document.getElementById('img')
+	var file = img.files[0];
+
+	if (img.files.length != 0) {
+
+		// max 5 MB size allowed
+		if (file.size > 5 * 1024 * 1024) {
+			alert('Please select file having less than 5MB size.');
+			return;
+		}
+	}
+})
+// when the user click on the delete button then kindly add the id to the delete-form so it can be accessed by delete form in future
+$(document).on("click", '.delete-btn', function() {
+	id = $(this).attr('data-id')
+	$('#delete-form').attr('data-id', id)
+})
+//delete form retreive the form and add id in it and pass it to the backend 
+$(document).on("submit", '#delete-form', function(event) {
+	event.preventDefault()
+	id = $(this).attr('data-id')
+	form_data = new FormData(this)
+	form_data.append('id', id)
+	$.ajax({
+		url: "{% url 'delete-group' %}",
+		data: form_data,
+		type: "POST",
+		processData: false,
+		contentType: false,
+		success: function(data) {
+			console.log(data)
+			// close the opened modal
+			$('#exampleModal').modal('hide');
+			// delete the tr element and child elements of particular id
+			document.querySelector('#group-' + data.id).remove()
+			sendMessage(data.messages[0])
+
+		}
+
+	});
+
+})
+// this create a group element for a particular group
+function createGroupElement(group) {
+	return `
+    <tr id="group-${group.id}">
+                                <td><img src="${group.img}" alt="${group.name}" class="avatar-sm rounded-circle me-2" /><a href="/chat/${group.slug}" class="text-body">${group.name}</a></td>
+                                <td><span class="badge badge-soft-primary mb-0">${group.type.type}</span></td>
+                                <td>${group.created_by.user.username}</td>
+                                <td>${group.members_count}</td>
+                                <td>
+                                  <ul class="list-inline mb-0">
+                                      <li class="list-inline-item">
+                                          <a href="javascript:void(0);" title="Edit group" class="px-2 text-primary edit-btn" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" data-id="${group.id}"><i class="bx bx-pencil font-size-18"></i></a> 
+                                      </li>
+                                      <li class="list-inline-item">
+                                          <a href="javascript:void(0);"  data-bs-toggle="modal" data-bs-target="#exampleModal" title="Delete" class="px-2 text-danger delete-btn" data-id="${group.id}"><i class="bx bx-trash-alt font-size-18"></i></a>
+                                      </li>
+                                  </ul>
+                                </td>
+                            </tr>
+    `
+}
+// create button will called when user click on create group it simply remove the edit attr if present so that this form is considered as 
+// create form
+$(document).on("click", '#create-btn', function() {
+	console.log('fgg')
+		$('#group-form').removeAttr('edit')
+		$('#group-form').removeAttr('data-id')
+		$('#group-form')[0].reset()
+	}) 
+
+function sendMessage(message){
+	console.log(message.message)
+	message_element = `
+          <div class="alert alert-${message.tags} alert-dismissible fade show" role="alert">
+                      ${message.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+	`
+	console.log(message_element)
+	$('#messages').html(message_element);
+
+}
+
+  </script>

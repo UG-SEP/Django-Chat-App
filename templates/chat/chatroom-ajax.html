@@ -1,0 +1,83 @@
+<script>
+   setInterval(function() {
+    $.ajax({
+        url: "{% url 'update-last-seen' %}",
+        data: {'grpslug':JSON.parse(document.getElementById('grpslug').textContent)},
+        success: function(response) {
+            console.log('Last seen timestamp updated')
+            usersStatus_element = $('#usersStatus')
+            if (usersStatus_element!== 'undefined' && usersStatus_element!==false){
+                updateUsersStatus(response.usersStatus,usersStatus_element)
+            }
+        }
+    });
+}, 3000);
+
+function updateUsersStatus(usersStatus,usersStatus_element){
+    var data = ''
+    for(let key in usersStatus){
+        console.log(key)
+        data+=`
+        <a href="#" class="list-group-item list-group-item-action border-0">
+                            <div class="d-flex align-items-start">
+                                <img src="${usersStatus[key][1]}" class="rounded-circle mr-1" alt="${key}" width="40" height="40">
+                                <div class="flex-grow-1 ml-3">
+                                    ${key}
+                                    <div class="small"><span class="fas fa-circle chat-online"></span>${usersStatus[key][0]}<i class="bi bi-circle-fill text-success"></i></div>
+                                </div>
+                            </div>
+                        </a>
+        `
+    }
+    usersStatus_element.html(data)
+}
+$(document).on("click",'.doc-send',function(){
+    var file = $('#upload-doc')[0].files
+    var form_data = new FormData()
+    form_data.append('file',file[0])
+    form_data.append('msg',$('#msg').val())
+    form_data.append('grpslug',grpslug)
+    console.log(csrftoken)
+    form_data.append('csrfmiddlewaretoken',csrftoken)
+    $.ajax({
+		url: "{% url 'add-msg' %}",
+		data: form_data,
+		type: "POST",
+		processData: false,
+		contentType: false,
+		success: function(data) {
+            data = document.getElementsByClassName('emojionearea-editor')[0]
+            data.textContent = ''
+            $("#upload-doc").val('')
+            $('#selected-doc').html('')
+            $('.doc-send').attr('class','btn msg-send')
+        }
+
+	});
+})
+$(document).on("click",".forward-btn",function(){
+    msg_id = $(this).attr('data-id')
+    $('#forward-msg').attr('data-id',msg_id)
+})
+$(document).on("submit","#forward-msg",function(event){
+    msg_id = $(this).attr('data-id')
+    form_data = new FormData(this)
+    form_data.append('msg_id',msg_id)
+    $.ajax({
+		url: "{% url 'forward-msg' %}",
+		data: form_data,
+		type: "POST",
+		processData: false,
+		contentType: false,
+		success: function(data) {
+            console.log('msg_send to all')
+            $('#forward-msg')[0].reset()
+            $('#scrollable-modal').modal('hide');
+
+        }
+
+	});
+    event.preventDefault()
+})
+
+</script>

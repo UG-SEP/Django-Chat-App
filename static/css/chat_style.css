@@ -1,0 +1,71 @@
+
+.chat-online {
+    color: #34ce57
+}
+
+.chat-offline {
+    color: #e22a3d
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    max-height: 800px;
+    overflow-y: scroll
+}
+
+.chat-message-left,
+.chat-message-right {
+    display: flex;
+    flex-shrink: 0
+}
+
+.chat-message-left {
+    margin-right: auto
+}
+
+.chat-message-right {
+    flex-direction: row-reverse;
+    margin-left: auto
+}
+.py-3 {
+    padding-top: 1rem!important;
+    padding-bottom: 1rem!important;
+}
+.px-4 {
+    padding-right: 1.5rem!important;
+    padding-left: 1.5rem!important;
+}
+.flex-grow-0 {
+    flex-grow: 0!important;
+}
+.border-top {
+    border-top: 1px solid #dee2e6!important;
+}
+* {
+    font-family: Arial, Helvetica, san-serif;
+  }
+  .row:after, .row:before {
+    content: " ";
+    display: table;
+    clear: both;
+  }
+  .span6 {
+    float: left;
+    width: 48%;
+    padding: 1%;
+  }
+  
+  .emojionearea-standalone {
+    float: right;
+  }
+  .emojionearea{
+    width: 60% !important;
+  }
+  .dropdown-menu-center{
+    left: 50% !important;
+  right: auto !important;
+  text-align: center !important;
+  min-width: fit-content;
+  }
+  

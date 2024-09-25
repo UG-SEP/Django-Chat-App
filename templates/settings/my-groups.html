@@ -1,0 +1,123 @@
+{% extends 'navigation.html' %}
+{% block title %}Profile{% endblock %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+<link rel="stylesheet" href="{% static 'css/group.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.0/css/boxicons.min.css" integrity="sha512-pVCM5+SN2+qwj36KonHToF2p1oIvoU3bsqxphdOIWMYmgr4ZqD3t5DjKvvetKhXGc/ZG5REYTT6ltKfExEei/Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.3.45/css/materialdesignicons.css" integrity="sha256-NAxhqDvtY0l4xn+YVa6WjAcmd94NNfttjNsDmNatFVc=" crossorigin="anonymous" />
+<div class="container">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <h5 class="card-title">Contact List <span class="text-muted fw-normal ms-2">(834)</span></h5>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-3">
+                
+                <div>
+                    <a href="javascript:void(0);" class="btn btn-primary " data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" id="create-btn"><i class="bx bx-plus me-1"></i> Add New</a>
+                    
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+                <div class="table-responsive">
+                    <table class="table project-list-table table-nowrap align-middle table-borderless">
+                        <thead>
+                            <tr>
+                                <th scope="col">GupShup Name</th>
+                                <th scope="col">GupShup Type</th>
+                                <th scope="col">Created By</th>
+                                <th scope="col">Members</th>
+                                <th scope="col" style="width: 200px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gtbody">
+                            {% for group in groups %}
+                            <tr id="group-{{group.id}}">
+                                <td><img src="{{group.img.url}}" alt="{{group.name}}" class="avatar-sm rounded-circle me-2" /><a href="{% url 'chat-room' group.slug %}" class="text-body">{{group.name}}</a></td>
+                                <td><span class="badge badge-soft-primary mb-0">{{group.type.type}}</span></td>
+                                <td>{{group.created_by.user.username}}</td>
+                                <td>{{group.members_count}}</td>
+                                <td>
+                                {% if group.created_by.user == user %}
+                                  <ul class="list-inline mb-0">
+                                      <li class="list-inline-item">
+                                          <a href="javascript:void(0);" title="Edit group" class="px-2 text-primary edit-btn" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" data-id="{{group.id}}"><i class="bx bx-pencil font-size-18"></i></a>
+                                          
+                                      </li>
+                                      <li class="list-inline-item">
+                                          <a href="javascript:void(0);"  data-bs-toggle="modal" data-bs-target="#exampleModal" title="Delete" class="px-2 text-danger delete-btn" data-id="{{group.pk}}" ><i class="bx bx-trash-alt font-size-18"></i></a>
+                                      </li>
+                                  </ul>
+                                {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+        </div>
+    </div>
+    <div class="offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Edit Group Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <p>
+           <form method="post" id="group-form" enctype="multipart/form-data" data-id="">
+            {% csrf_token %}
+            {{form.as_p}}
+            <button type="submit" class="btn btn-primary" id="save-changes">Submit</button>
+           </form>
+        </p>
+      </div>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Are you sure?</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="word-break: break-all;">
+            You will not able to undo this action ⚠
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <form method="post" id="delete-form" data-id="">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">Delete Anyway</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <a class="page-link" href="?page={{page_obj.previous_page_number}}">Previous</a>
+        {% else %}
+        <li class="page-item disabled">
+          <a class="page-link">Previous</a>
+        </li>
+        {% endif %}
+        <li class="page-item"><a class="page-link active" >{{page_obj.number}}</a></li>
+        {% if page_obj.has_next %}
+        <a class="page-link" href="?page={{page_obj.next_page_number}}">Next</a>
+        {% else %}
+        <li class="page-item disabled">
+          <a class="page-link">Next</a>
+        </li>
+        {% endif %}
+      </ul>
+</div>
+      {% include 'settings/my-groups-ajax.html' %}
+    
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "navigation.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+{% load socialaccount %}
+
+    <form action="" method="post" style="margin: 10px;">
+        {% csrf_token %}
+        {% for field in form %}
+        {{field.label}}
+        {{field}}
+        <br>
+        {% endfor %}
+        <div style="margin-bottom: 20px;">
+            <a href="{% url 'password_reset' %}">Forgot Password</a>
+            <a href="{% provider_login_url 'google' %}">Login With Google</a>
+            <a href="{% provider_login_url 'facebook' method='oauth2' %}">Facebook OAuth2</a>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+
+    </form>
+    {% endblock %}
